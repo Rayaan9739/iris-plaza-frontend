@@ -1,0 +1,10 @@
+export declare enum RoomType {
+    ONE_BHK = "ONE_BHK",
+    TWO_BHK = "TWO_BHK",
+    THREE_BHK = "THREE_BHK",
+    SINGLE = "SINGLE",
+    DOUBLE = "DOUBLE",
+    STUDIO = "STUDIO",
+    SUITE = "SUITE",
+    PENTHOUSE = "PENTHOUSE"
+}
