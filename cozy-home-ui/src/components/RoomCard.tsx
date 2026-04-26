@@ -130,6 +130,7 @@ export const RoomCard = memo(function RoomCard({ room, className }: RoomCardProp
               muted={true}
               loop={true}
               playsInline={true}
+              controls={true}
               poster={room.images?.[0]}
             />
           ) : (

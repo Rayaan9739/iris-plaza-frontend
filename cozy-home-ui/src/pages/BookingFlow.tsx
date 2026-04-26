@@ -82,8 +82,6 @@ export default function BookingFlow() {
 
   const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
   const [collegeIdFile, setCollegeIdFile] = useState<File | null>(null);
-  const [livePhotoFile, setLivePhotoFile] = useState<File | null>(null);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   // Room availability data
   const [roomOccupiedUntil, setRoomOccupiedUntil] = useState<string | null>(null);
@@ -91,9 +89,6 @@ export default function BookingFlow() {
 
   const aadhaarInputRef = useRef<HTMLInputElement | null>(null);
   const collegeInputRef = useRef<HTMLInputElement | null>(null);
-  const liveVideoRef = useRef<HTMLVideoElement | null>(null);
-  const liveCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const liveStreamRef = useRef<MediaStream | null>(null);
 
   const totalDue = useMemo(() => rent + deposit, [rent, deposit]);
   const occupiedUntilDate = useMemo(
@@ -213,70 +208,7 @@ export default function BookingFlow() {
   
   useEffect(() => {
     loadInitialData();
-    return () => {
-      if (liveStreamRef.current) {
-        liveStreamRef.current.getTracks().forEach((track) => track.stop());
-        liveStreamRef.current = null;
-      }
-    };
   }, [location.key]);
-
-  useEffect(() => {
-    if (currentStep !== 2 && liveStreamRef.current) {
-      liveStreamRef.current.getTracks().forEach((track) => track.stop());
-      liveStreamRef.current = null;
-      setIsCameraOpen(false);
-    }
-  }, [currentStep]);
-
-  async function startLiveCamera() {
-    setError("");
-    try {
-      if (liveStreamRef.current) {
-        liveStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false,
-      });
-      liveStreamRef.current = stream;
-      if (liveVideoRef.current) {
-        liveVideoRef.current.srcObject = stream;
-        await liveVideoRef.current.play();
-      }
-      setIsCameraOpen(true);
-    } catch {
-      setError("Unable to access camera for live photo capture.");
-      setIsCameraOpen(false);
-    }
-  }
-
-  async function captureLivePhoto() {
-    if (!liveVideoRef.current || !liveCanvasRef.current) return;
-    const video = liveVideoRef.current;
-    const canvas = liveCanvasRef.current;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-    const blob = await fetch(imageDataUrl).then((res) => res.blob());
-    const file = new File([blob], "tenant-live-photo.jpg", {
-      type: "image/jpeg",
-    });
-    setLivePhotoFile(file);
-    if (liveStreamRef.current) {
-      liveStreamRef.current.getTracks().forEach((track) => track.stop());
-      liveStreamRef.current = null;
-    }
-    if (liveVideoRef.current) {
-      liveVideoRef.current.srcObject = null;
-    }
-    setIsCameraOpen(false);
-  }
 
   function validateUploadFile(file: File | null, allowPdf = false) {
     if (!file) return "File is required.";
@@ -357,12 +289,6 @@ export default function BookingFlow() {
         documentType: "COLLEGE_ID",
         name: "COLLEGE_ID",
         type: "ID_CARD",
-      },
-      {
-        file: livePhotoFile,
-        documentType: "TENANT_PHOTO",
-        name: "TENANT_PHOTO",
-        type: "PHOTO",
       },
     ];
 
@@ -446,14 +372,6 @@ export default function BookingFlow() {
     if (currentStep === 2) {
       setSubmitting(true);
       setError("");
-
-      // Live photo is mandatory
-      const liveError = validateUploadFile(livePhotoFile, false);
-      if (liveError) {
-        setError("Live photo is required.");
-        setSubmitting(false);
-        return;
-      }
 
       // At least one identity document is required (Aadhaar OR College ID)
       const aadhaarError = validateUploadFile(aadhaarFile, true);
@@ -675,7 +593,7 @@ export default function BookingFlow() {
                 Upload Documents
               </h2>
               <p className="text-sm text-muted-foreground">
-                Upload your live photo and at least one ID proof (Aadhaar or College ID).
+                Upload at least one ID proof (Aadhaar or College ID).
               </p>
 
               {[
@@ -692,19 +610,6 @@ export default function BookingFlow() {
                   hint: "Upload your College ID (jpg, jpeg, png, pdf up to 5MB)",
                   onClick: () => collegeInputRef.current?.click(),
                   fileName: collegeIdFile?.name || "",
-                },
-                {
-                  key: "live",
-                  title: "Live Photo * (required)",
-                  hint: "Capture using device camera - this is required",
-                  onClick: async () => {
-                    if (!liveStreamRef.current) {
-                      await startLiveCamera();
-                    } else {
-                      await captureLivePhoto();
-                    }
-                  },
-                  fileName: livePhotoFile?.name || "",
                 },
               ].map((doc) => (
                 <div
@@ -726,11 +631,7 @@ export default function BookingFlow() {
                     </div>
                   </div>
                   <Button variant="outline" size="sm" onClick={doc.onClick}>
-                    {doc.key === "live"
-                      ? isCameraOpen
-                        ? "Capture"
-                        : "Open Camera"
-                      : "Upload"}
+                    Upload
                   </Button>
                 </div>
               ))}
@@ -749,17 +650,6 @@ export default function BookingFlow() {
                 className="hidden"
                 onChange={(e) => setCollegeIdFile(e.target.files?.[0] || null)}
               />
-
-              <div className={isCameraOpen ? "" : "hidden"}>
-                <video
-                  ref={liveVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  style={{ width: "100%", borderRadius: "8px" }}
-                />
-                <canvas ref={liveCanvasRef} />
-              </div>
             </div>
           )}
 

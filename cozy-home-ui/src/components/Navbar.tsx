@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Building2, Menu, X, Bell, CreditCard, User, LayoutDashboard, LogOut } from "lucide-react";
+import { Building2, Menu, X, Bell, CreditCard, User, LayoutDashboard, LogOut, MessageCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { getMyNotifications, markNotificationsRead } from "@/api";
 import { clearAuthStorage, getAccessToken, getCurrentUserRole } from "@/lib/auth";
 import { getNotificationTargetPath } from "@/lib/notification-routing";
+import { extractNotificationPhone, getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface NavLink {
   label: string;
@@ -232,18 +233,35 @@ export function Navbar({
                         No notifications yet.
                       </p>
                     ) : (
-                      notifications.slice(0, 5).map((item) => (
-                        <div
-                          key={item.id}
-                          className="rounded-md border p-2 mb-2 last:mb-0"
-                          onClick={() => handleNotificationClick(item)}
-                        >
-                          <p className="text-sm font-medium">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.message}
-                          </p>
-                        </div>
-                      ))
+                      notifications.slice(0, 5).map((item) => {
+                        const whatsappPhone = extractNotificationPhone(item);
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="rounded-md border p-2 mb-2 last:mb-0"
+                            onClick={() => handleNotificationClick(item)}
+                          >
+                            <p className="text-sm font-medium">{item.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.message}
+                            </p>
+                            {whatsappPhone && (
+                              <a
+                                href={getWhatsAppUrl(whatsappPhone)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(event) => event.stopPropagation()}
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700"
+                                aria-label="Open this contact in WhatsApp"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                                WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        );
+                      })
                     )}
                     {notifications.length > 0 && (
                       <Button 

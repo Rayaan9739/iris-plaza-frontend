@@ -15,6 +15,7 @@ async function bootstrap() {
   const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:5001",
+    "http://localhost:8080",
     process.env.FRONTEND_URL,
   ].filter((origin): origin is string => Boolean(origin));
 

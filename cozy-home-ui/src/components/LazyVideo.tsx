@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo, useCallback } from "react";
 import { useVisibilityTracker } from "@/hooks/useIntersectionObserver";
 import { cn } from "@/lib/utils";
-import { Play, Volume2, VolumeX } from "lucide-react";
+import { FastForward, Play, Rewind, Volume2, VolumeX } from "lucide-react";
 
 interface LazyVideoProps {
   src: string;
@@ -132,6 +132,38 @@ export const LazyVideo = memo(function LazyVideo({
     setIsMuted(!isMuted);
   }, [isMuted]);
 
+   const seekBy = useCallback((seconds: number) => {
+     if (!videoRef.current) return;
+     const video = videoRef.current;
+     const duration = Number.isFinite(video.duration) ? video.duration : null;
+     const nextTime = duration
+       ? Math.min(Math.max(video.currentTime + seconds, 0), duration)
+       : Math.max(video.currentTime + seconds, 0);
+     video.currentTime = nextTime;
+   }, []);
+
+   // Keyboard shortcuts for seeking (when controls are shown)
+   useEffect(() => {
+     const handleKeyDown = (e: KeyboardEvent) => {
+       if (!isReady || !videoRef.current) return;
+       // Only handle events when the video container or its children are focused
+       const activeElement = document.activeElement;
+       const isVideoInteractive = activeElement === videoRef.current || videoRef.current.contains(activeElement as Node);
+       if (!isVideoInteractive) return;
+
+       if (e.key === "ArrowLeft") {
+         e.preventDefault();
+         seekBy(-10);
+       } else if (e.key === "ArrowRight") {
+         e.preventDefault();
+         seekBy(10);
+       }
+     };
+
+     window.addEventListener("keydown", handleKeyDown);
+     return () => window.removeEventListener("keydown", handleKeyDown);
+   }, [isReady, seekBy]);
+
   return (
     <div
       ref={containerRef}
@@ -151,7 +183,9 @@ export const LazyVideo = memo(function LazyVideo({
           muted={muted}
           loop={loop}
           playsInline={playsInline}
+          controls={controls}
           preload={preload}
+          tabIndex={controls ? 0 : -1}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onError={() => setHasError(true)}
@@ -180,7 +214,7 @@ export const LazyVideo = memo(function LazyVideo({
       )}
 
       {/* Play button overlay (for non-autoplay videos) */}
-      {isReady && !autoPlay && !isPlaying && (
+      {isReady && !autoPlay && !isPlaying && !controls && (
         <button
           onClick={togglePlay}
           className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
@@ -190,6 +224,30 @@ export const LazyVideo = memo(function LazyVideo({
             <Play className="h-8 w-8 text-gray-900 ml-1" fill="currentColor" />
           </div>
         </button>
+      )}
+
+      {/* Seek buttons for room videos with controls enabled */}
+      {isReady && controls && !hasError && (
+        <div className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => seekBy(-10)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white shadow-sm transition-colors hover:bg-black/75"
+            aria-label="Rewind 10 seconds"
+            title="Rewind 10 seconds"
+          >
+            <Rewind className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => seekBy(10)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white shadow-sm transition-colors hover:bg-black/75"
+            aria-label="Forward 10 seconds"
+            title="Forward 10 seconds"
+          >
+            <FastForward className="h-5 w-5" />
+          </button>
+        </div>
       )}
 
       {/* Mute button (when playing) */}

@@ -56,6 +56,15 @@ export default function RoomDetails() {
 
   const mediaItems = useMemo(() => {
     if (!room) return [];
+    if (Array.isArray(room.media) && room.media.length) {
+      return room.media
+        .map((item) => ({
+          type: item.type,
+          url: item.url,
+        }))
+        .filter((item) => item.url);
+    }
+
     const items: { type: "image" | "video"; url: string }[] = [];
     (room.images || []).forEach((url) => {
       if (url) items.push({ type: "image", url });

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Bell, Check, FileText, CreditCard, AlertCircle, Wrench, Info } from "lucide-react";
+import { Bell, Check, FileText, CreditCard, AlertCircle, Wrench, Info, MessageCircle } from "lucide-react";
 import { getMyNotifications, markAllNotificationsRead, markNotificationRead } from "@/api";
 import { getNotificationTargetPath } from "@/lib/notification-routing";
+import { extractNotificationPhone, getWhatsAppUrl } from "@/lib/whatsapp";
 
 function getNotificationIcon(type: string) {
   const iconMap: Record<string, any> = {
@@ -163,6 +164,7 @@ export default function TenantNotifications() {
               const Icon = getNotificationIcon(notification.type);
               const colorClass = getNotificationColor(notification.type);
               const isUnread = !notification.isRead;
+              const whatsappPhone = extractNotificationPhone(notification);
 
               return (
                 <div
@@ -197,9 +199,24 @@ export default function TenantNotifications() {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground/70 mt-2">
-                        {formatDate(notification.createdAt)}
-                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <p className="text-xs text-muted-foreground/70">
+                          {formatDate(notification.createdAt)}
+                        </p>
+                        {whatsappPhone && (
+                          <a
+                            href={getWhatsAppUrl(whatsappPhone)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => event.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700"
+                            aria-label="Open this contact in WhatsApp"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            WhatsApp
+                          </a>
+                        )}
+                      </div>
                     </div>
 
                     {/* Unread indicator */}

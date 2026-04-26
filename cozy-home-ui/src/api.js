@@ -253,7 +253,7 @@ export async function getAvailableRooms(selectedMonth) {
   if (selectedMonth && isValidMonthKey(selectedMonth)) {
     query = `?month=${encodeURIComponent(selectedMonth.trim())}`;
   }
-  const rooms = await request(`/rooms/available${query}`);
+  const rooms = await request(`/api/rooms/available${query}`);
   return Array.isArray(rooms) ? rooms.map(normalizeRoom) : [];
 }
 
@@ -267,7 +267,7 @@ export async function getAdminRooms(token) {
 }
 
 export async function getAdminRoom(token, id) {
-  const room = await request(`/admin/rooms/${id}`, {
+  const room = await request(`/api/admin/rooms/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -294,7 +294,7 @@ export async function createAdminAmenity(token, name) {
 }
 
 export async function deleteAdminAmenity(token, amenityId) {
-  return request(`/admin/amenities/${amenityId}`, {
+  return request(`/api/admin/amenities/${amenityId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -303,7 +303,7 @@ export async function deleteAdminAmenity(token, amenityId) {
 }
 
 export async function getRoomById(id) {
-  const room = await request(`/rooms/${id}`);
+  const room = await request(`/api/rooms/${id}`);
   return normalizeRoom(room);
 }
 
@@ -429,7 +429,7 @@ export async function getAllBookings(token) {
 }
 
 export async function approveBooking(token, bookingId) {
-  return request(`/admin/bookings/${bookingId}/approve`, {
+  return request(`/api/admin/bookings/${bookingId}/approve`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -438,7 +438,7 @@ export async function approveBooking(token, bookingId) {
 }
 
 export async function rejectBooking(token, bookingId) {
-  return request(`/admin/bookings/${bookingId}/reject`, {
+  return request(`/api/admin/bookings/${bookingId}/reject`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -471,7 +471,7 @@ export async function getAdminTenants(token) {
 }
 
 export async function getAdminTenantById(token, tenantId) {
-  return request(`/admin/tenants/${tenantId}`, {
+  return request(`/api/admin/tenants/${tenantId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -479,7 +479,7 @@ export async function getAdminTenantById(token, tenantId) {
 }
 
 export async function removeAdminTenant(token, tenantId) {
-  return request(`/admin/tenants/${tenantId}`, {
+  return request(`/api/admin/tenants/${tenantId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -488,7 +488,7 @@ export async function removeAdminTenant(token, tenantId) {
 }
 
 export async function updateAdminTenant(token, tenantId, data) {
-  return request(`/admin/tenants/${tenantId}`, {
+  return request(`/api/admin/tenants/${tenantId}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -515,7 +515,7 @@ export async function uploadVerificationFile(token, file, documentType) {
     ? `?documentType=${encodeURIComponent(documentType)}`
     : "";
 
-  return request(`/documents/upload/file${suffix}`, {
+  return request(`/api/documents/upload/file${suffix}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -535,7 +535,7 @@ export async function createDocumentRecord(token, payload) {
 }
 
 export async function updateAdminRoom(token, roomId, formData) {
-  const data = await request(`/admin/rooms/${roomId}`, {
+  const data = await request(`/api/admin/rooms/${roomId}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -547,7 +547,7 @@ export async function updateAdminRoom(token, roomId, formData) {
 }
 
 export async function deleteAdminRoom(token, roomId) {
-  return request(`/admin/rooms/${roomId}`, {
+  return request(`/api/admin/rooms/${roomId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -630,7 +630,7 @@ export async function getAllPayments(token) {
 }
 
 export async function markPaymentPaid(token, paymentId, amountReceived, note, paymentMethod) {
-  return request(`/admin/payments/${paymentId}/mark-paid`, {
+  return request(`/api/admin/payments/${paymentId}/mark-paid`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -668,8 +668,8 @@ export async function updateDocumentStatus(
   const normalized = String(status || "").toUpperCase();
   const path =
     normalized === "APPROVED"
-      ? `/admin/documents/${documentId}/approve`
-      : `/admin/documents/${documentId}/reject`;
+      ? `/api/admin/documents/${documentId}/approve`
+      : `/api/admin/documents/${documentId}/reject`;
   return request(path, {
     method: "PATCH",
     headers: {
@@ -711,7 +711,7 @@ export async function getAdminMaintenanceRequests(token) {
 }
 
 export async function approveAdminMaintenanceRequest(token, requestId) {
-  return request(`/admin/maintenance/${requestId}/approve`, {
+  return request(`/api/admin/maintenance/${requestId}/approve`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -720,7 +720,7 @@ export async function approveAdminMaintenanceRequest(token, requestId) {
 }
 
 export async function rejectAdminMaintenanceRequest(token, requestId) {
-  return request(`/admin/maintenance/${requestId}/reject`, {
+  return request(`/api/admin/maintenance/${requestId}/reject`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -787,7 +787,7 @@ export async function getPendingCancellationRequests(token) {
 }
 
 export async function approveCancellationRequest(token, requestId) {
-  return request(`/cancellation-request/${requestId}/approve`, {
+  return request(`/api/cancellation-request/${requestId}/approve`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -800,7 +800,7 @@ export async function rejectCancellationRequest(
   requestId,
   rejectionReason,
 ) {
-  return request(`/cancellation-request/${requestId}/reject`, {
+  return request(`/api/cancellation-request/${requestId}/reject`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -845,7 +845,7 @@ export async function uploadPaymentScreenshot(token, paymentId, file) {
 }
 
 export async function adminApprovePayment(token, paymentId) {
-  return request(`/payments/admin/${paymentId}/approve`, {
+  return request(`/api/payments/admin/${paymentId}/approve`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -854,7 +854,7 @@ export async function adminApprovePayment(token, paymentId) {
 }
 
 export async function adminRejectPayment(token, paymentId, reason) {
-  return request(`/payments/admin/${paymentId}/reject`, {
+  return request(`/api/payments/admin/${paymentId}/reject`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -882,7 +882,7 @@ export async function markAllNotificationsRead(token) {
 }
 
 export async function markNotificationRead(token, notificationId) {
-  return request(`/notifications/${notificationId}/read`, {
+  return request(`/api/notifications/${notificationId}/read`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -909,7 +909,7 @@ export async function getOccupancyData(token) {
 
 // Agreement signing APIs
 export async function signAgreementAsTenant(token, bookingId, signature) {
-  return request(`/agreements/booking/${bookingId}/sign`, {
+  return request(`/api/agreements/booking/${bookingId}/sign`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -920,7 +920,7 @@ export async function signAgreementAsTenant(token, bookingId, signature) {
 }
 
 export async function signAgreementAsAdmin(token, bookingId, signature) {
-  return request(`/agreements/admin/booking/${bookingId}/sign`, {
+  return request(`/api/agreements/admin/booking/${bookingId}/sign`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -931,7 +931,7 @@ export async function signAgreementAsAdmin(token, bookingId, signature) {
 }
 
 export async function getAgreementByBooking(token, bookingId) {
-  return request(`/agreements/booking/${bookingId}`, {
+  return request(`/api/agreements/booking/${bookingId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

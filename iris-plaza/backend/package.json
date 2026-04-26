@@ -6,8 +6,8 @@
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
-    "dev": "nest start --watch",
-    "start:dev": "nest start --watch",
+    "dev": "PORT=5001 nest start --watch",
+    "start:dev": "PORT=5001 nest start --watch",
     "start:debug": "nest start --watch --debug",
     "start:prod": "node dist/main.js",
     "postinstall": "prisma generate",

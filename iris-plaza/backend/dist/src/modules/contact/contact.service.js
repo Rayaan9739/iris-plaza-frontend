@@ -29,6 +29,13 @@ let ContactService = class ContactService {
             type: client_1.NotificationType.ANNOUNCEMENT,
             title: `New Contact Form: ${dto.subject}`,
             message: `Name: ${dto.name}\nEmail: ${dto.email}\nPhone: ${dto.phone || 'Not provided'}\n\nMessage:\n${dto.message}`,
+            metadata: {
+                source: 'contact-form',
+                name: dto.name,
+                email: dto.email,
+                phone: dto.phone || null,
+                subject: dto.subject,
+            },
         }));
         await Promise.all(notificationPromises);
         return {

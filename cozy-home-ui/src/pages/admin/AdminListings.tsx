@@ -123,7 +123,7 @@ export default function AdminListings() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [successMsg, setSuccessMsg] = useState("");
   // media state: files selected for upload and existing items when editing
-  const [mediaInputs, setMediaInputs] = useState<Array<File | null>>([]);
+  const [mediaInputs, setMediaInputs] = useState<File[][]>([]);
   const [existingMedia, setExistingMedia] = useState<
     Array<{ type: string; url: string }>
   >([]);
@@ -240,12 +240,21 @@ export default function AdminListings() {
         rules: r.rules?.length ? r.rules : [""],
       });
       // prepare existing media list from normalized room
-      const media: Array<{ type: string; url: string }> = [];
-      if (r.videoUrl) {
-        media.push({ type: "video", url: r.videoUrl });
-      }
-      if (Array.isArray(r.images)) {
-        r.images.forEach((url) => media.push({ type: "image", url }));
+      const media: Array<{ type: string; url: string }> = Array.isArray(r.media)
+        ? r.media
+            .map((item) => ({
+              type: item.type,
+              url: item.url,
+            }))
+            .filter((item) => item.url)
+        : [];
+      if (!media.length) {
+        if (r.videoUrl) {
+          media.push({ type: "video", url: r.videoUrl });
+        }
+        if (Array.isArray(r.images)) {
+          r.images.forEach((url) => media.push({ type: "image", url }));
+        }
       }
       setExistingMedia(media);
       setMediaInputs([]);
@@ -279,33 +288,37 @@ export default function AdminListings() {
 
   // media helpers for add/remove inputs
   function addMediaInput() {
-    setMediaInputs((prev) => [...prev, null]);
+    setMediaInputs((prev) => [...prev, []]);
   }
 
   function handleMediaChange(
     index: number,
     e: React.ChangeEvent<HTMLInputElement>,
   ) {
-    const file = e.target.files?.[0] || null;
-    if (!file) {
-      setMediaInputs((prev) => prev.map((f, i) => (i === index ? null : f)));
+    const files = Array.from(e.target.files || []);
+    if (!files.length) {
+      setMediaInputs((prev) => prev.map((f, i) => (i === index ? [] : f)));
       return;
     }
 
-    if (!ALLOWED_MEDIA_MIME_TYPES.has(file.type)) {
+    const invalidFile = files.find(
+      (file) => !ALLOWED_MEDIA_MIME_TYPES.has(file.type),
+    );
+    if (invalidFile) {
       setError("Only JPG, PNG, WEBP, MP4, MOV, and WEBM files are allowed.");
       e.target.value = "";
       return;
     }
 
-    if (file.size > MAX_MEDIA_FILE_SIZE) {
+    const oversizedFile = files.find((file) => file.size > MAX_MEDIA_FILE_SIZE);
+    if (oversizedFile) {
       setError("Each media file must be 100MB or smaller.");
       e.target.value = "";
       return;
     }
 
     setError("");
-    setMediaInputs((prev) => prev.map((f, i) => (i === index ? file : f)));
+    setMediaInputs((prev) => prev.map((f, i) => (i === index ? files : f)));
   }
 
   function removeMediaInput(index: number) {
@@ -480,10 +493,10 @@ export default function AdminListings() {
       // correctly clear/replace media during update.
       formData.append("existingMedia", JSON.stringify(existingMedia));
 
-      mediaInputs.forEach((file) => {
-        if (file) {
+      mediaInputs.forEach((files) => {
+        files.forEach((file) => {
           formData.append("media", file);
-        }
+        });
       });
 
       if (editingRoom) {
@@ -890,13 +903,21 @@ export default function AdminListings() {
                       </div>
                     ))}
 
-                    {mediaInputs.map((file, i) => (
+                    {mediaInputs.map((files, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,video/mp4,video/mov,video/webm"
-                          onChange={(e) => handleMediaChange(i, e)}
-                        />
+                        <div className="flex-1">
+                          <Input
+                            type="file"
+                            multiple
+                            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                            onChange={(e) => handleMediaChange(i, e)}
+                          />
+                          {files.length > 0 && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {files.length} file{files.length === 1 ? "" : "s"} selected
+                            </p>
+                          )}
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
